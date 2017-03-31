@@ -51,6 +51,10 @@ impl SslConnectorBuilder {
     pub fn new(method: SslMethod) -> Result<SslConnectorBuilder, ErrorStack> {
         let mut ctx = try!(ctx(method));
         try!(ctx.set_default_verify_paths());
+
+        #[cfg(target_os = "android")]
+        Self::init_cert(&mut ctx);
+
         // From https://github.com/python/cpython/blob/c30098c8c6014f3340a369a31df9c74bdbacc269/Lib/ssl.py#L191
         try!(ctx.set_cipher_list("ECDH+AESGCM:ECDH+CHACHA20:DH+AESGCM:DH+CHACHA20:ECDH+AES256:\
                                   DH+AES256:ECDH+AES128:DH+AES:ECDH+HIGH:DH+HIGH:RSA+AESGCM:\
@@ -58,6 +62,28 @@ impl SslConnectorBuilder {
         ctx.set_verify(SSL_VERIFY_PEER);
 
         Ok(SslConnectorBuilder(ctx))
+    }
+
+    #[cfg(target_os = "android")]
+    pub fn init_cert(ctx: &mut SslContextBuilder) {
+        use std::path::Path;
+        use std::fs::File;
+        use std::io::prelude::*;
+
+        info!("write cert file");
+        static ROOT_CERT: &'static [u8] = include_bytes!("/Users/cong/repos/data/cacert.pem");
+        let cert_path = "/data/user/0/larksdk.me.yiii.larksdk/files/cacert.pem";
+
+        {
+            let mut file = File::create(cert_path).expect("write cert file failed");
+            let _ = file.write_all(ROOT_CERT);
+        }
+
+        info!("invoke set_ca_file");
+        match ctx.set_ca_file(&Path::new(cert_path)) {
+            Ok(_) => {}
+            Err(err) => panic!("Unexpected error {:?}", err),
+        }
     }
 
     /// Returns a shared reference to the inner `SslContextBuilder`.

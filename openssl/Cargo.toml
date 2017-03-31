@@ -13,6 +13,7 @@ build = "build.rs"
 exclude = ["test/*"]
 
 [features]
+default = ["v102"]
 v101 = []
 v102 = []
 v110 = []
@@ -23,6 +24,7 @@ foreign-types = "0.2"
 lazy_static = "0.2"
 libc = "0.2"
 openssl-sys = { version = "0.9.9", path = "../openssl-sys" }
+log = "0.3"
 
 [dev-dependencies]
 tempdir = "0.3"

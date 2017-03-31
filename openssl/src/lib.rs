@@ -55,6 +55,9 @@ pub mod version;
 pub mod x509;
 #[cfg(any(ossl102, ossl110))]
 mod verify;
+#[macro_use]
+extern crate log;
+
 
 fn cvt_p<T>(r: *mut T) -> Result<*mut T, ErrorStack> {
     if r.is_null() {
